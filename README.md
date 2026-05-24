@@ -1,6 +1,155 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Allo Inventory Reservation System
 
-## Getting Started
+A full-stack inventory reservation system built using Next.js, Prisma, PostgreSQL (Supabase), and Tailwind CSS.
+
+The system prevents overselling by temporarily reserving inventory during checkout.
+
+---
+
+# Features
+
+- Product listing page
+- Warehouse-wise inventory tracking
+- Reserve inventory for checkout
+- 10-minute reservation hold
+- Checkout page with live countdown timer
+- Confirm reservation
+- Cancel reservation
+- Automatic release of expired reservations
+- Dynamic frontend updates
+
+---
+
+# Tech Stack
+
+- Next.js 16
+- React
+- TypeScript
+- Prisma ORM
+- PostgreSQL (Supabase)
+- Tailwind CSS
+
+---
+
+# How to Run Locally
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/Santhoshkumar0913/Allo-inventory.git
+
+cd Allo-inventory
+```
+
+## 2. Install Dependencies
+
+```bash
+npm install
+```
+
+## 3. Setup Environment Variables
+
+Create a `.env` file:
+
+```env
+DATABASE_URL="your_database_url"
+
+DIRECT_URL="your_direct_database_url"
+```
+
+## 4. Run Prisma Migration
+
+```bash
+npx prisma migrate dev
+```
+
+## 5. Seed Database
+
+```bash
+npx prisma db seed
+```
+
+## 6. Start App
+
+```bash
+npm run dev
+```
+
+Open:
+
+```txt
+http://localhost:3000
+```
+
+---
+
+# Reservation Flow
+
+## Reserve Product
+
+- `reservedUnits` increases
+- available stock decreases
+- reservation expires after 10 minutes
+
+## Confirm Purchase
+
+- stock is permanently decremented
+- reserved hold is released
+
+## Cancel Reservation
+
+- reserved stock is released
+- total stock remains unchanged
+
+---
+
+# Expiry Mechanism
+
+Reservations contain an `expiresAt` field.
+
+Expired reservations are released using:
+
+```txt
+/api/cleanup
+```
+
+In production, this should run automatically using cron jobs (example: Vercel Cron Jobs).
+
+---
+
+# API Routes
+
+| Route | Description |
+|---|---|
+| `/api/products` | Get inventory |
+| `/api/reservations` | Create reservation |
+| `/api/reservations/[id]` | Get reservation details |
+| `/api/reservations/confirm` | Confirm reservation |
+| `/api/reservations/cancel` | Cancel reservation |
+| `/api/cleanup` | Release expired reservations |
+
+---
+
+# Trade-offs
+
+- Used polling/manual refresh instead of WebSockets
+- No authentication implemented
+- Cleanup handled through API endpoint
+
+---
+
+# Future Improvements
+
+- Redis-based locking
+- Real-time updates
+- Payment gateway integration
+- User authentication
+- Admin dashboard
+- Docker deployment
+
+---
+
+# Getting Started
 
 First, run the development server:
 
@@ -16,21 +165,37 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can start editing the page by modifying:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```txt
+app/page.tsx
+```
 
-## Learn More
+The page auto-updates as you edit the file.
 
-To learn more about Next.js, take a look at the following resources:
+This project uses Next.js App Router and Tailwind CSS for frontend development.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Learn More
 
-## Deploy on Vercel
+To learn more about Next.js:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- https://nextjs.org/docs
+- https://nextjs.org/learn
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+# Deploy on Vercel
+
+The easiest way to deploy this Next.js app is using Vercel.
+
+Deployment Docs:
+
+https://nextjs.org/docs/app/building-your-application/deploying
+
+---
+
+# Author
+
+Santhosh Kumar
