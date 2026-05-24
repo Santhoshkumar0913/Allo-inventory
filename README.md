@@ -130,25 +130,6 @@ In production, this should run automatically using cron jobs (example: Vercel Cr
 
 ---
 
-# Trade-offs
-
-- Used polling/manual refresh instead of WebSockets
-- No authentication implemented
-- Cleanup handled through API endpoint
-
----
-
-# Future Improvements
-
-- Redis-based locking
-- Real-time updates
-- Payment gateway integration
-- User authentication
-- Admin dashboard
-- Docker deployment
-
----
-
 # Getting Started
 
 First, run the development server:
