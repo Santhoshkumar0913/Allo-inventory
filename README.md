@@ -179,4 +179,4 @@ https://nextjs.org/docs/app/building-your-application/deploying
 
 # Author
 
-Santhosh Kumar
+P Santhoshkumar
