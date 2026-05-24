@@ -40,10 +40,12 @@ export async function POST(req: NextRequest) {
         throw new Error("Not enough stock");
       }
 
-      // Update reserved units
+      // Update reserved units with defensive check
       await tx.inventory.update({
         where: {
           id: inventory.id,
+          productId,
+          warehouseId,
         },
         data: {
           reservedUnits: {

@@ -28,6 +28,8 @@ export async function POST() {
           await tx.inventory.update({
             where: {
               id: inventory.id,
+              productId: reservation.productId,
+              warehouseId: reservation.warehouseId,
             },
             data: {
               reservedUnits: {

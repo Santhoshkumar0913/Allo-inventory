@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.$transaction(async (tx) => {
+    if (reservation.status !== "PENDING") {
+      return NextResponse.json(
+        { error: "Reservation already processed" },
+        { status: 400 }
+      );
+    }
+
+    const updatedReservation = await prisma.$transaction(async (tx) => {
 
       const inventory = await tx.inventory.findFirst({
         where: {
@@ -36,6 +43,8 @@ export async function POST(req: NextRequest) {
       await tx.inventory.update({
         where: {
           id: inventory.id,
+          productId: reservation.productId,
+          warehouseId: reservation.warehouseId,
         },
         data: {
           reservedUnits: {
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.reservation.update({
+      return await tx.reservation.update({
         where: {
           id: reservationId,
         },
@@ -56,6 +65,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       message: "Reservation cancelled",
+      reservation: updatedReservation,
     });
 
   } catch (error) {

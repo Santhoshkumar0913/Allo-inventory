@@ -1,45 +1,151 @@
-async function getInventory() {
-  const res = await fetch("http://localhost:3000/api/products", {
-    cache: "no-store",
-  });
+"use client";
 
-  return res.json();
-}
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default async function Home() {
-  const inventory = await getInventory();
+type InventoryItem = {
+  inventoryId: string;
+  productId: string;
+  productName: string;
+  warehouseId: string;
+  warehouseName: string;
+  totalUnits: number;
+  reservedUnits: number;
+  availableUnits: number;
+};
+
+export default function Home() {
+
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [message, setMessage] = useState("");
+
+  const router = useRouter();
+
+  async function loadInventory() {
+
+    const res = await fetch("/api/products");
+
+    const data = await res.json();
+
+    setInventory(data);
+  }
+
+  useEffect(() => {
+    loadInventory();
+  }, []);
+
+  async function reserveProduct(
+    productId: string,
+    warehouseId: string
+  ) {
+
+    try {
+
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId,
+          warehouseId,
+          quantity: 1,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+
+        if (res.status === 409) {
+          setMessage("Not enough stock");
+          return;
+        }
+
+        if (res.status === 410) {
+          setMessage("Reservation expired");
+          return;
+        }
+
+        setMessage(data.error);
+        return;
+      }
+
+      router.push(
+        `/checkout?id=${data.reservation.id}`
+      );
+
+    } catch (error) {
+
+      setMessage("Something went wrong");
+    }
+  }
 
   return (
-    <main className="p-10">
-      <h1 className="text-3xl font-bold mb-6">
+
+    <main className="min-h-screen bg-gray-100 p-10">
+
+      <h1 className="mb-8 text-4xl font-bold">
         Inventory Dashboard
       </h1>
 
-      <table className="border-collapse border border-gray-400 w-full">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-2">Product</th>
-            <th className="border p-2">Warehouse</th>
-            <th className="border p-2">Total Units</th>
-            <th className="border p-2">Reserved Units</th>
-            <th className="border p-2">Available Units</th>
-          </tr>
-        </thead>
+      {message && (
+        <div className="mb-6 rounded bg-red-100 p-4 text-red-700">
+          {message}
+        </div>
+      )}
 
-        <tbody>
-          {inventory.map((item: any) => (
-            <tr key={item.inventoryId}>
-              <td className="border p-2">{item.productName}</td>
-              <td className="border p-2">{item.warehouseName}</td>
-              <td className="border p-2">{item.totalUnits}</td>
-              <td className="border p-2">{item.reservedUnits}</td>
-              <td className="border p-2 font-bold text-green-600">
-                {item.availableUnits}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+        {inventory.map((item) => (
+
+          <div
+            key={item.inventoryId}
+            className="rounded-xl bg-white p-6 shadow"
+          >
+
+            <h2 className="text-2xl font-bold">
+              {item.productName}
+            </h2>
+
+            <p className="mb-4 text-gray-500">
+              {item.warehouseName}
+            </p>
+
+            <p>
+              <strong>Total Units:</strong>{" "}
+              {item.totalUnits}
+            </p>
+
+            <p>
+              <strong>Reserved Units:</strong>{" "}
+              {item.reservedUnits}
+            </p>
+
+            <p className="text-green-600 font-bold">
+              Available Units: {item.availableUnits}
+            </p>
+
+            <button
+              onClick={() =>
+                reserveProduct(
+                  item.productId,
+                  item.warehouseId
+                )
+              }
+              disabled={item.availableUnits <= 0}
+              className="mt-6 w-full rounded bg-black px-4 py-2 text-white"
+            >
+              {item.availableUnits > 0
+                ? "Reserve"
+                : "Out of Stock"}
+            </button>
+
+          </div>
+        ))}
+
+      </div>
+
     </main>
   );
 }
