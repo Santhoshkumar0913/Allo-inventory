@@ -4,49 +4,48 @@ import { NextResponse } from "next/server";
 export async function POST() {
   try {
 
-    // Find expired pending reservations
     const expiredReservations = await prisma.reservation.findMany({
       where: {
         status: "PENDING",
         expiresAt: {
-          lte: new Date(),
+          lt: new Date(),
         },
       },
     });
 
     for (const reservation of expiredReservations) {
 
-      // Find matching inventory
-      const inventory = await prisma.inventory.findFirst({
-        where: {
-          productId: reservation.productId,
-          warehouseId: reservation.warehouseId,
-        },
-      });
+      await prisma.$transaction(async (tx) => {
 
-      if (inventory) {
-
-        // Release reserved stock
-        await prisma.inventory.update({
+        const inventory = await tx.inventory.findFirst({
           where: {
-            id: inventory.id,
-          },
-          data: {
-            reservedUnits: {
-              decrement: reservation.quantity,
-            },
+            productId: reservation.productId,
+            warehouseId: reservation.warehouseId,
           },
         });
-      }
 
-      // Mark reservation as expired
-      await prisma.reservation.update({
-        where: {
-          id: reservation.id,
-        },
-        data: {
-          status: "EXPIRED",
-        },
+        if (inventory) {
+          await tx.inventory.update({
+            where: {
+              id: inventory.id,
+            },
+            data: {
+              reservedUnits: {
+                decrement: reservation.quantity,
+              },
+            },
+          });
+        }
+
+        await tx.reservation.update({
+          where: {
+            id: reservation.id,
+          },
+          data: {
+            status: "EXPIRED",
+          },
+        });
+
       });
     }
 
@@ -58,9 +57,7 @@ export async function POST() {
   } catch (error) {
 
     return NextResponse.json(
-      {
-        error: "Cleanup failed",
-      },
+      { error: "Cleanup failed" },
       { status: 500 }
     );
   }
